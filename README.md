@@ -15,7 +15,6 @@ Production-style Terraform platform for the FlowBoard serverless backend on AWS.
 ```text
 flowboard-terraform-platform/
 ├── infra/terraform/
-│   ├── backend.tf
 │   ├── versions.tf
 │   ├── variables.tf
 │   ├── locals.tf
@@ -43,16 +42,21 @@ flowboard-terraform-platform/
 
 ```bash
 cd infra/terraform
-terraform init
+terraform init -input=false
 terraform fmt -recursive
 terraform validate
 terraform plan -var-file="../../environments/dev.tfvars"
 ```
 
-## Remote state (recommended)
+`terraform plan` and `apply` need valid AWS credentials (for example `aws configure` or environment variables).
 
-This repository is ready for S3 backend configuration in `infra/terraform/backend.tf`.
-Pass backend values in CI/CD (`bucket`, `key`, `region`, `dynamodb_table`) during `terraform init`.
+Commit `infra/terraform/.terraform.lock.hcl` so CI and teammates use the same provider versions.
+
+## State storage (important)
+
+Right now this root module uses **local state** (`terraform.tfstate` next to the config). That is fine for learning and local runs.
+
+For team CI/CD and production, you should move to a **remote S3 backend** (plus DynamoDB for locking) so state is shared and applies are safe. Add a `terraform { backend "s3" { ... } }` block and run `terraform init -backend-config=...` when you are ready; document the bucket, key per environment, and lock table in `docs/terraform-bootstrap.md`.
 
 ## CI/CD
 

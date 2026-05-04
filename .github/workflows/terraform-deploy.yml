@@ -61,7 +61,7 @@ jobs:
           audience: sts.amazonaws.com
 
       - name: Terraform init
-        run: terraform init -backend=false
+        run: terraform init -input=false
 
       - name: Terraform plan
         run: terraform plan -var-file="../../environments/dev.tfvars" -out=tfplan
@@ -103,7 +103,7 @@ jobs:
           audience: sts.amazonaws.com
 
       - name: Terraform init
-        run: terraform init -backend=false
+        run: terraform init -input=false
 
       - name: Terraform plan
         run: terraform plan -var-file="../../environments/staging.tfvars" -out=tfplan
@@ -145,7 +145,7 @@ jobs:
           audience: sts.amazonaws.com
 
       - name: Terraform init
-        run: terraform init -backend=false
+        run: terraform init -input=false
 
       - name: Terraform plan
         run: terraform plan -var-file="../../environments/prod.tfvars" -out=tfplan
