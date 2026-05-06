@@ -1,42 +1,47 @@
-# FlowBoard Terraform Platform
+# FlowBoard Terraform Portfolio
 
-Production-style Terraform platform for the FlowBoard serverless backend on AWS.
+Focused Terraform portfolio implementation for serverless AWS infrastructure.
 
-## What this project provisions
+This repository demonstrates Terraform proficiency with minimal operational overhead:
 
-- API Gateway HTTP API
-- Lambda function
-- IAM role and least-privilege policies for runtime access to SSM/KMS
-- CloudWatch log group and error alarm
-- Environment-specific stacks (`dev`, `staging`, `prod`)
+- reusable Terraform module design
+- environment-driven root configuration
+- CI quality gates (`fmt`, `validate`, `plan`)
+- infrastructure parity with a Lambda + HTTP API architecture
+
+## Why this scope
+
+This project intentionally avoids full deployment automation/OIDC wiring at this stage to reduce setup overhead while still proving core Terraform skills. It is designed for interview discussion and fast iteration.
 
 ## Repository layout
 
 ```text
 flowboard-terraform-platform/
-├── infra/terraform/
-│   ├── versions.tf
-│   ├── variables.tf
-│   ├── locals.tf
-│   ├── main.tf
-│   └── outputs.tf
-├── lambda/
-│   └── src/
-│       └── handler.js
-├── environments/
-│   ├── dev.tfvars
-│   ├── staging.tfvars
-│   └── prod.tfvars
-└── .github/workflows/
-    ├── terraform-ci.yml
-    └── terraform-deploy.yml
+|-- modules/
+|   `-- lambda-http-api/
+|       |-- main.tf
+|       |-- variables.tf
+|       |-- locals.tf
+|       `-- outputs.tf
+|-- infra/terraform/
+|   |-- versions.tf
+|   |-- variables.tf
+|   |-- main.tf
+|   `-- outputs.tf
+|-- lambda/
+|   `-- src/
+|       `-- handler.js
+`-- .github/workflows/
+    `-- terraform-ci.yml
 ```
 
-## Branch to environment mapping
+## What the module provisions
 
-- `dev` -> Terraform apply with `environments/dev.tfvars`
-- `staging` -> Terraform apply with `environments/staging.tfvars`
-- `main` -> Terraform apply with `environments/prod.tfvars` (production approval gate)
+- Lambda function
+- API Gateway HTTP API (`ANY /` and `ANY /{proxy+}`)
+- IAM role + runtime SSM/KMS permissions
+- CloudWatch log group and error alarm
+- Lambda invocation permission for API Gateway
 
 ## Local usage
 
@@ -45,23 +50,18 @@ cd infra/terraform
 terraform init -input=false
 terraform fmt -recursive
 terraform validate
-terraform plan -var-file="../../environments/dev.tfvars"
+terraform plan -no-color
 ```
 
-`terraform plan` and `apply` need valid AWS credentials (for example `aws configure` or environment variables).
+Use your AWS credentials locally (`aws configure`) if you want a real plan against your account.
 
-Commit `infra/terraform/.terraform.lock.hcl` so CI and teammates use the same provider versions.
+## CI behavior
 
-## State storage (important)
+On pull requests, GitHub Actions runs:
 
-Right now this root module uses **local state** (`terraform.tfstate` next to the config). That is fine for learning and local runs.
+- `terraform fmt -check -recursive`
+- `terraform init -input=false`
+- `terraform validate`
+- `terraform plan -refresh=false`
 
-For team CI/CD and production, you should move to a **remote S3 backend** (plus DynamoDB for locking) so state is shared and applies are safe. Add a `terraform { backend "s3" { ... } }` block and run `terraform init -backend-config=...` when you are ready; document the bucket, key per environment, and lock table in `docs/terraform-bootstrap.md`.
-
-## CI/CD
-
-- PR pipeline runs `terraform fmt -check` and `terraform validate`
-- Deploy pipeline runs plan and apply via GitHub Actions + AWS OIDC
-- Environment secrets/variables:
-  - `AWS_ROLE_TO_ASSUME`
-  - `AWS_REGION`
+This gives fast IaC quality feedback without requiring full cloud deployment setup.

@@ -1,9 +1,9 @@
 output "api_url" {
   description = "HTTP API invoke URL"
-  value       = module.flowboard_api.api_url
+  value       = aws_apigatewayv2_stage.default.invoke_url
 }
 
 output "lambda_function_name" {
   description = "Lambda function name"
-  value       = module.flowboard_api.lambda_function_name
+  value       = aws_lambda_function.api.function_name
 }

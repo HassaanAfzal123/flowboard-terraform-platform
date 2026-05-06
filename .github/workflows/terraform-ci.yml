@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   terraform-checks:
-    name: Terraform fmt and validate
+    name: Terraform fmt, validate, and plan (dev example)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -33,3 +33,10 @@ jobs:
 
       - name: Terraform validate
         run: terraform validate
+
+      - name: Terraform plan (syntax + graph sanity)
+        env:
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_DEFAULT_REGION: ap-south-1
+        run: terraform plan -refresh=false -input=false -lock=false -no-color
